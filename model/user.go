@@ -31,9 +31,12 @@ func (request *RegisterRequest) Register() (response RegisterResponse, err error
 		return
 	}
 	rdb.Del("validate_code:"+request.Email)
+
+	// 加密密码,并返回加密后的密码和盐值
+	encodedPassword, salt := tools.Md5EncodingPassword(request.Password)
 	// 插入登录信息
-	_, err = db.Exec("INSERT INTO user (username, password, nickname, mail) VALUE(?, ?, ?, ?)",
-		request.Username, request.Password, request.Nickname, request.Email)
+	_, err = db.Exec("INSERT INTO user (username, password, salt, nickname, mail) VALUE(?, ?, ?, ?, ?)",
+		request.Username, encodedPassword, salt, request.Nickname, request.Email)
 	if err != nil {
 		if err.(*mysql.MySQLError).Number == DuplicatedCode { // 已有该账号
 			err = DuplicatedError
