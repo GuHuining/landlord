@@ -24,13 +24,13 @@ type RegisterResponse struct {
 // Register 用户注册
 func (request *RegisterRequest) Register() (response RegisterResponse, err error) {
 	// 判断验证码是否相符
-	result, err := rdb.Get("validate_code:"+request.Email).Result()
+	result, err := rdb.Get("validate_code:" + request.Email).Result()
 	if err != nil || result != request.ValidateCode {
 		response.Err = ValidateCodeError.Error()
 		err = ValidateCodeError
 		return
 	}
-	rdb.Del("validate_code:"+request.Email)
+	rdb.Del("validate_code:" + request.Email)
 
 	// 加密密码,并返回加密后的密码和盐值
 	encodedPassword, salt := tools.Md5EncodingPassword(request.Password)
@@ -60,7 +60,7 @@ type SendValidateCodeResponse struct {
 // 发送验证码
 func (request *SendValidateCodeRequest) SendValidateCode() (response SendValidateCodeResponse, err error) {
 	// 判断生成验证码间隔是否小于1分钟
-	result, err := rdb.TTL("validate_time:"+request.Email).Result()
+	result, err := rdb.TTL("validate_time:" + request.Email).Result()
 	if result > 0 {
 		err = RequestTooQuick
 		response.Err = RequestTooQuick.Error()
@@ -68,7 +68,7 @@ func (request *SendValidateCodeRequest) SendValidateCode() (response SendValidat
 	}
 	// 随机生成验证码
 	validateCode := rand.Intn(900000) + 100000
-	err = rdb.Set("validate_code:"+request.Email, validateCode, 15 * time.Minute).Err()
+	err = rdb.Set("validate_code:"+request.Email, validateCode, 15*time.Minute).Err()
 	if err != nil {
 		return
 	}
@@ -83,6 +83,36 @@ func (request *SendValidateCodeRequest) SendValidateCode() (response SendValidat
 	err = tools.SendMail(request.Email, "验证码", body)
 	if err != nil {
 		response.Err = SendMailFailedError.Error()
+		return
+	}
+	response.Ok = true
+	return
+}
+
+type LoginRequest struct {
+	Username string `json:"username" binding:"required,min=6,max=20"`
+	Password string `json:"password" binding:"required,min=6,max=20"`
+}
+
+type LoginResponse struct {
+	Ok       bool   `json:"ok"`
+	Err      string `json:"err"`
+	UserID   int    `json:"user_id"`
+	Nickname string `json:"nickname"`
+}
+
+// Login 登录
+func (request *LoginRequest) Login() (response LoginResponse, err error) {
+	var password, salt string
+	err = db.QueryRow("SELECT user_id, nickname, password, salt FROM user WHERE username=?", request.Username).
+		Scan(&response.UserID, &response.Nickname, &password, &salt)
+	if err != nil {
+		response.Err = PasswordNotMatchError.Error()
+		return
+	}
+	if !tools.ValidatePassword(password, request.Password, salt) { // 用户名与密码不匹配
+		response.Err = PasswordNotMatchError.Error()
+		err = PasswordNotMatchError
 		return
 	}
 	response.Ok = true

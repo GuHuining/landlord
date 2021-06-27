@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"landlord/service"
 	"log"
@@ -14,6 +15,7 @@ func init() {
 
 func main() {
 	server := gin.Default()
+	server.Use(sessions.Sessions("landlord", service.Store)) // 设置session
 	api := server.Group("/api") // api统一以/api开头
 
 	userGroupRegister(api)
@@ -29,4 +31,5 @@ func userGroupRegister(api *gin.RouterGroup) {
 	//	/api/user/register
 	group.POST("/register", service.Register)
 	group.POST("/validate_code", service.SendValidateCode)
+	group.POST("/login", service.Login)
 }
