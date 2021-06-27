@@ -1,0 +1,9 @@
+mysql:
+  addr: "localhost:3306"
+  username: ""
+  password: ""
+  dbname: landlord
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 1
