@@ -1,0 +1,28 @@
+body, html {
+    border: 0
+}
+
+body {
+    background: url("/asset/index_background.png") no-repeat;
+    height: 100%;
+    width: 100%;
+    background-size: 100%;
+}
+
+.choice_frame {
+    margin: 300px auto;
+    height: 400px;
+    width: 300px;
+}
+
+.choice {
+    display: block;
+    margin: 20px auto;
+    width: 200px;
+    height: 60px;
+    border-radius: 5px;
+    border-width: 0;
+    background-image: radial-gradient(#ffc773, #ff7500);
+    font-size: 30px;
+}
+
