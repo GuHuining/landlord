@@ -54,5 +54,11 @@ func Login(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Set("user_id", response.UserID)
 	session.Set("nickname", response.Nickname)
+	if err = session.Save(); err != nil {
+		response.Ok = false
+		response.Err = "登录失败"
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
 	c.JSON(http.StatusOK, response)
 }
