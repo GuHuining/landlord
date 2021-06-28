@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"landlord/model"
@@ -47,7 +48,11 @@ func Login(c *gin.Context) {
 	}
 	response, err := request.Login()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response)
+		if errors.Is(err, model.PasswordNotMatchError) {
+			c.JSON(http.StatusUnauthorized, response)
+		} else {
+			c.JSON(http.StatusInternalServerError, response)
+		}
 		return
 	}
 	// 设置session
