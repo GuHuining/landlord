@@ -103,9 +103,10 @@ type LoginResponse struct {
 
 // Login 登录
 func (request *LoginRequest) Login() (response LoginResponse, err error) {
-	var password, salt string
+	var password, salt, nickname string
+	var userID int
 	err = db.QueryRow("SELECT user_id, nickname, password, salt FROM user WHERE username=?", request.Username).
-		Scan(&response.UserID, &response.Nickname, &password, &salt)
+		Scan(&userID, &nickname, &password, &salt)
 	if err != nil {
 		response.Err = PasswordNotMatchError.Error()
 		return
@@ -115,6 +116,8 @@ func (request *LoginRequest) Login() (response LoginResponse, err error) {
 		err = PasswordNotMatchError
 		return
 	}
+	response.Nickname = nickname
+	response.UserID = userID
 	response.Ok = true
 	return
 }
