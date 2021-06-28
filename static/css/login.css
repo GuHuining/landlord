@@ -1,0 +1,52 @@
+body, html {
+    border: 0
+}
+
+body {
+    background: url("/asset/index_background.png") no-repeat;
+    height: 100%;
+    width: 100%;
+    background-size: 100%;
+}
+
+.login_frame {
+    margin: 300px auto;
+    padding: 10px;
+    height: 300px;
+    width: 400px;
+    border-radius: 20px;
+    background-color: #ffc773;
+    opacity: 0.95;
+}
+
+.login_block {
+    margin: 50px auto;
+}
+
+.login_block > label {
+    font-size: 30px;
+}
+
+.login_block > input {
+    height: 32px;
+    width: 250px;
+    font-size: 30px;
+    float: right;
+}
+
+.login_button {
+    margin: 30px auto;
+    text-align: center;
+}
+
+.login_button > button {
+    height: 40px;
+    width: 70px;
+    background-color: dodgerblue;
+    border-radius: 10px;
+}
+
+.login_button > a {
+    text-decoration: none;
+    color: black;
+}
