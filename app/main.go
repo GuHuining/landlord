@@ -32,4 +32,5 @@ func userGroupRegister(api *gin.RouterGroup) {
 	group.POST("/register", service.Register)
 	group.POST("/validate_code", service.SendValidateCode)
 	group.POST("/login", service.Login)
+	group.POST("/login_check", service.LoginCheck)
 }

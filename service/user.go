@@ -62,3 +62,14 @@ func Login(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, response)
 }
+
+// 检查是否登录
+func LoginCheck(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("user_id")
+	if id == nil {
+		c.JSON(http.StatusUnauthorized, nil)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
