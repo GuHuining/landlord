@@ -11,7 +11,6 @@ import (
 type RegisterRequest struct {
 	Username     string `json:"username" binding:"required,max=20,min=6"`
 	Password     string `json:"password" binding:"required,max=20,min=6"`
-	Nickname     string `json:"nickname" binding:"required,max=20"`
 	Email        string `json:"email" binding:"required,email,max=254"`
 	ValidateCode string `json:"validate_code" binding:"required,len=6"`
 }
@@ -35,8 +34,8 @@ func (request *RegisterRequest) Register() (response RegisterResponse, err error
 	// 加密密码,并返回加密后的密码和盐值
 	encodedPassword, salt := tools.Md5EncodingPassword(request.Password)
 	// 插入登录信息
-	_, err = db.Exec("INSERT INTO user (username, password, salt, nickname, mail) VALUE(?, ?, ?, ?, ?)",
-		request.Username, encodedPassword, salt, request.Nickname, request.Email)
+	_, err = db.Exec("INSERT INTO user (username, password, salt, mail) VALUE(?, ?, ?, ?, ?)",
+		request.Username, encodedPassword, salt, request.Email)
 	if err != nil {
 		if err.(*mysql.MySQLError).Number == DuplicatedCode { // 已有该账号
 			err = DuplicatedError
