@@ -41,13 +41,13 @@ let register_frame = new Vue({
     },
     methods: {
         get_code: function () {
-            let email = document.getElementById("register_email")
-            if (!email.value.match(/.+@.+\..+/)) {
+            this.email = this.email.trim()
+            if (!this.email.match(/.+@.+\..+/)) {
                 alert("请输入正确格式的邮箱")
                 return
             }
             let data = {
-                email: email.value
+                email: this.email
             }
             axios.post("/api/user/validate_code", data)
                 .catch(function (error) {
@@ -59,6 +59,12 @@ let register_frame = new Vue({
             login_frame.show = true
         },
         register: function () {
+            this.username = this.username.trim()
+            this.password = this.password.trim()
+            this.password_again = this.password_again.trim()
+            this.email = this.email.trim()
+            this.validate_code = this.validate_code.trim()
+
             if (this.username.length < 6 || this.username.length > 20) {
                 alert("用户名应在6-20位之间")
                 return
