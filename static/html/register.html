@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/css/register.css">
+</head>
+<body>
+<div class="register_frame">
+    <div class="register_block">
+        <label for="username">用户名</label>
+        <input id="username">
+    </div>
+    <div class="register_block">
+        <label for="password">密码</label>
+        <input id="password">
+    </div>
+    <div class="register_block">
+        <label for="password_again">重复密码</label>
+        <input id="password_again">
+    </div>
+    <div class="register_block">
+        <label for="email">邮箱</label>
+        <input id="email">
+    </div>
+    <div class="register_block">
+        <label for="validate_code">验证码</label>
+        <input id="validate_code">
+    </div>
+    <div id="get_validate_code" @click="get_code">获取验证码</div>
+    <div class="register_button">
+        <button id="register" @click="register">注册</button>
+        <a href="/login.html">登录</a>
+    </div>
+</div>
+
+<script src="/js/register.js"></script>
+</body>
+</html>
