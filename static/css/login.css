@@ -50,7 +50,6 @@ body {
     cursor: pointer;
 }
 
-.login_button > a {
-    text-decoration: none;
-    color: black;
+.login_button > span:hover {
+    cursor: pointer;
 }
