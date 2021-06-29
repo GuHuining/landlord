@@ -4,11 +4,11 @@ let login_frame = new Vue({
     <div class="login_frame">
         <div class="login_block">
             <label for="login_username">用户名</label>
-            <input id="login_username">
+            <input id="login_username" v-model="username">
         </div>
         <div class="login_block">
             <label for="login_password">密码</label>
-            <input id="login_password">
+            <input id="login_password" type="password" v-model="password">
         </div>
         <div class="login_button">
             <button id="login" @click="login">登录</button>
@@ -20,25 +20,26 @@ let login_frame = new Vue({
 `,
     el: "#v_login_frame",
     data: {
-        show: false
+        show: false,
+        username: "",
+        password: ""
     },
     methods: {
         login: function () {
             let vm = this
-            let username = document.getElementById("login_username")
-            let password = document.getElementById("login_password")
-
-            if (username.value.length < 6 || username.value.length > 20) {
+            this.username = this.username.trim()
+            this.password = this.password.trim()
+            if (this.username.length < 6 || this.username.length > 20) {
                 alert("用户名长度应在6-20之间")
                 return
             }
-            if (password.value.length < 6 || password.value.length > 20) {
-                alert("用户名长度应在6-20之间")
+            if (this.password.length < 6 || this.password.length > 20) {
+                alert("密码长度应在6-20之间")
                 return
             }
             let data = {
-                username: username.value,
-                password: password.value,
+                username: this.username,
+                password: this.password,
             }
             axios.post("/api/user/login", data)
                 .then(function (response) {
