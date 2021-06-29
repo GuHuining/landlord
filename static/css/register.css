@@ -45,6 +45,10 @@ body {
     color: dodgerblue;
 }
 
+#get_validate_code:hover {
+    cursor: pointer
+}
+
 .register_button {
     margin: 30px auto;
     text-align: center;
@@ -55,6 +59,10 @@ body {
     width: 70px;
     background-color: dodgerblue;
     border-radius: 10px;
+}
+
+.register_button > button:hover {
+    cursor: pointer;
 }
 
 .register_button > a {

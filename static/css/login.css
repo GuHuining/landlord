@@ -46,6 +46,10 @@ body {
     border-radius: 10px;
 }
 
+.login_button > button:hover {
+    cursor: pointer;
+}
+
 .login_button > a {
     text-decoration: none;
     color: black;
