@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"landlord/tools"
@@ -34,7 +35,7 @@ func (request *RegisterRequest) Register() (response RegisterResponse, err error
 	// 加密密码,并返回加密后的密码和盐值
 	encodedPassword, salt := tools.Md5EncodingPassword(request.Password)
 	// 插入登录信息
-	_, err = db.Exec("INSERT INTO user (username, password, salt, mail) VALUE(?, ?, ?, ?, ?)",
+	_, err = db.Exec("INSERT INTO user (username, password, salt, mail) VALUE(?, ?, ?, ?)",
 		request.Username, encodedPassword, salt, request.Email)
 	if err != nil {
 		if err.(*mysql.MySQLError).Number == DuplicatedCode { // 已有该账号
@@ -102,7 +103,8 @@ type LoginResponse struct {
 
 // Login 登录
 func (request *LoginRequest) Login() (response LoginResponse, err error) {
-	var password, salt, nickname string
+	var password, salt string
+	var nickname sql.NullString
 	var userID int
 	err = db.QueryRow("SELECT user_id, nickname, password, salt FROM user WHERE username=?", request.Username).
 		Scan(&userID, &nickname, &password, &salt)
@@ -115,7 +117,9 @@ func (request *LoginRequest) Login() (response LoginResponse, err error) {
 		err = PasswordNotMatchError
 		return
 	}
-	response.Nickname = nickname
+	if nickname.Valid {
+		response.Nickname = nickname.String
+	}
 	response.UserID = userID
 	response.Ok = true
 	return
