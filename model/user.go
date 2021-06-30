@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"landlord/tools"
@@ -160,6 +161,9 @@ type BindNicknameResponse struct {
 func (request *BindNicknameRequest) BindNickname() (response BindNicknameResponse, err error) {
 	_, err = db.Exec("UPDATE user SET nickname=? WHERE user_id=?", request.Nickname, request.UserID)
 	if err != nil {
+		if _, ok := err.(*mysql.MySQLError); ok && err.(*mysql.MySQLError).Number == DuplicatedCode {
+			err = errors.New("昵称已存在")
+		}
 		response.Err = err.Error()
 		return
 	}
