@@ -124,3 +124,24 @@ func (request *LoginRequest) Login() (response LoginResponse, err error) {
 	response.Ok = true
 	return
 }
+
+type BindNicknameRequest struct {
+	Nickname string `json:"nickname" binding:"required,max=20"`
+	UserID   int    `json:"-"`
+}
+
+type BindNicknameResponse struct {
+	Ok  bool   `json:"ok"`
+	Err string `json:"err"`
+}
+
+// BindNickname 绑定昵称
+func (request *BindNicknameRequest) BindNickname() (response BindNicknameResponse, err error) {
+	_, err = db.Exec("UPDATE user SET nickname=? WHERE user_id=?", request.Nickname, request.UserID)
+	if err != nil {
+		response.Err = err.Error()
+		return
+	}
+	response.Ok = true
+	return
+}

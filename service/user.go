@@ -78,3 +78,26 @@ func LoginCheck(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, nil)
 }
+
+// BindNickname 绑定昵称
+func BindNickname(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("user_id")
+	if id == nil {
+		c.JSON(http.StatusUnauthorized, nil)
+		return
+	}
+	var request model.BindNicknameRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, BadRequestError{err.Error()})
+		return
+	}
+	// 传入需绑定用户名的账户ID
+	request.UserID = id.(int)
+	response, err := request.BindNickname()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response)
+	} else {
+		c.JSON(http.StatusOK, response)
+	}
+}
