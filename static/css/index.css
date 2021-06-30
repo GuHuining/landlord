@@ -27,7 +27,6 @@ body {
     width: 200px;
     height: 60px;
     border-radius: 5px;
-    border-width: 0;
     background-image: radial-gradient(#ffc773, #ff7500);
     font-size: 30px;
 }
