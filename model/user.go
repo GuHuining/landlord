@@ -125,6 +125,27 @@ func (request *LoginRequest) Login() (response LoginResponse, err error) {
 	return
 }
 
+type IsLoginRequest struct {
+	UserId int `json:"-"`
+}
+
+type IsLoginResponse struct {
+	Nickname string `json:"nickname"`
+}
+
+// IsLogin 判断是否登录并且返回昵称
+func (request *IsLoginRequest) IsLogin() (response IsLoginResponse, err error) {
+	var nickname sql.NullString
+	err = db.QueryRow("SELECT nickname FROM user WHERE user_id=?", request.UserId).Scan(&nickname)
+	if err != nil {
+		return
+	}
+	if nickname.Valid {
+		response.Nickname = nickname.String
+	}
+	return
+}
+
 type BindNicknameRequest struct {
 	Nickname string `json:"nickname" binding:"required,max=20"`
 	UserID   int    `json:"-"`

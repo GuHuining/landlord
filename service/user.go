@@ -76,7 +76,14 @@ func LoginCheck(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, nil)
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	var request model.IsLoginRequest
+	request.UserId = id.(int)
+	response, err := request.IsLogin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+	} else {
+		c.JSON(http.StatusOK, response)
+	}
 }
 
 // BindNickname 绑定昵称
