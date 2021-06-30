@@ -53,3 +53,32 @@ body {
 .login_button > span:hover {
     cursor: pointer;
 }
+
+.nickname_frame {
+    z-index: 2;
+    margin: 400px auto;
+    height: 100px;
+    width: 500px;
+    background-color: #ff461f;
+    border-radius: 10px;
+    opacity: 0.95;
+    font-size: 25px;
+    overflow: hidden;
+    box-shadow: 5px 5px 5px #111111;
+}
+
+.nickname_block {
+    margin: 30px auto;
+    text-align: center;
+}
+
+#input_nickname {
+    height: 28px;
+    width: 200px;
+    font-size: 25px;
+}
+
+.nickname_block > button {
+    height: 30px;
+    width: 56px;
+}

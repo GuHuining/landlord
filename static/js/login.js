@@ -44,7 +44,19 @@ let login_frame = new Vue({
             axios.post("/api/user/login", data)
                 .then(function (response) {
                     vm.show = false
-                    index_choices.show = true
+                    // 检查是否绑定昵称
+                    axios.post("/api/user/login_check", {})
+                        .then(function (response) {
+                            if (response.data.nickname === "") {
+                                nickname_frame.show = true
+                            } else {
+                                index_choices.show = true
+                            }
+                        })
+                        .catch(function (error) {
+                            alert("登录失败")
+                            vm.show = true
+                        })
                 })
                 .catch(function (error) {
                     alert(error.response.data.err)
@@ -57,3 +69,42 @@ let login_frame = new Vue({
     }
 })
 
+let nickname_frame = new Vue({
+    template: `
+<div class="bg" v-show="show">
+    <div class="nickname_frame">
+        <div class="nickname_block">
+            <label for="input_nickname">昵称(20字符以内)</label>
+            <input id="input_nickname" maxlength="20" v-model="nickname">
+            <button @click="commit">确认</button>
+        </div>
+        
+    </div>
+</div>
+`,
+    el: "#v_nickname_frame",
+    data: {
+        show: false,
+        nickname: ""
+    },
+    methods: {
+        commit: function () {
+            this.nickname = this.nickname.trim()
+            if (this.nickname === "") {
+                alert("请输入昵称")
+                return
+            }
+            let data = {
+                nickname: this.nickname
+            }
+            axios.post("/api/user/bind_nickname", data)
+                .then(function (response) {
+                    nickname_frame.show = false
+                    index_choices.show = true
+                })
+                .catch(function (error) {
+                    alert(error.response.data.err)
+                })
+        }
+    }
+})
