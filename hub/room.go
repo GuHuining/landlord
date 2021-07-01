@@ -17,7 +17,20 @@ type Room struct {
 }
 
 func (room *Room) New() {
-	room.NewPlayer = make(chan Player)
+	room.NewPlayer = make(chan Player, 1)
+}
+
+// Wait 等待用户加入
+func (room *Room) Run() {
+	for {
+		select {
+		case player := <-room.NewPlayer: { // 加入房间
+			if len(room.Players) >= 3 {
+				player.Conn.WriteJSON(Response{ERROR, "该房间已满", nil})
+			}
+		}
+		}
+	}
 }
 
 type Rooms struct {
@@ -73,7 +86,9 @@ func (rooms *Rooms) PopFront() (room *Room, err error) {
 }
 
 // 按照ID提取一个房间
-func (rooms *Rooms) GetByID(id int) (room *Room, err error) {
+func (rooms *Rooms) PopByID(id int) (room *Room, err error) {
+	rooms.Mu.Lock()
+	defer rooms.Mu.Unlock()
 	room, ok := rooms.RoomsMap[id]
 	if !ok {
 		err = errors.New("房间不存在")
@@ -95,5 +110,18 @@ func (rooms *Rooms) GetByID(id int) (room *Room, err error) {
 	room.Before = nil
 	room.Next = nil
 	rooms.Number--
+	delete(rooms.RoomsMap, room.ID)
+	return
+}
+
+// 按照ID获取一个房间，但不从房间列表中移除
+func (rooms *Rooms) GetByID(id int) (room *Room, err error) {
+	rooms.Mu.Lock()
+	defer rooms.Mu.Unlock()
+	room, ok := rooms.RoomsMap[id]
+	if !ok {
+		err = errors.New("房间不存在")
+		return
+	}
 	return
 }
