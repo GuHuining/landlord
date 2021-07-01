@@ -6,13 +6,14 @@ import (
 )
 
 type Room struct {
-	ID        int
-	Password  string
-	Players   []Player
-	NewPlayer chan Player
-	Before    *Room
-	Next      *Room
-	Mu        sync.Mutex
+	ID         int
+	Password   string
+	Players    []Player
+	NewPlayer  chan Player
+	PlayerExit chan int
+	Before     *Room
+	Next       *Room
+	Mu         sync.Mutex
 }
 
 func (room *Room) New() {
@@ -48,7 +49,7 @@ func (rooms *Rooms) PushBack(room *Room) {
 		rooms.Tail = room
 	}
 	rooms.RoomsMap[room.ID] = room
-	rooms.Number ++
+	rooms.Number++
 }
 
 // 从头部提取一个房间
