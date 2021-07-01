@@ -34,3 +34,22 @@ func GetDatabaseConfig() DatabaseConfig {
 	}
 	return config
 }
+
+type Rooms struct {
+	Number int `yaml:"number"`
+}
+type PlayConfig struct {
+	Rooms `yaml:"rooms"`
+}
+
+func GetPlayConfig() PlayConfig {
+	content, err := os.ReadFile("./config/play.yaml")
+	if err != nil {
+		panic(err)
+	}
+	var config PlayConfig
+	if err := yaml.Unmarshal(content, &config); err != nil {
+		panic(err)
+	}
+	return config
+}
