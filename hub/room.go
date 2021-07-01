@@ -6,17 +6,23 @@ import (
 )
 
 type Room struct {
-	ID       int
-	Password string
-	Players  []Player
-	Before   *Room
-	Next     *Room
-	Mu       sync.Mutex
+	ID        int
+	Password  string
+	Players   []Player
+	NewPlayer chan Player
+	Before    *Room
+	Next      *Room
+	Mu        sync.Mutex
+}
+
+func (room *Room) New() {
+	room.NewPlayer = make(chan Player)
 }
 
 type Rooms struct {
 	Head     *Room
 	Tail     *Room
+	Number   int
 	RoomsMap map[int]*Room
 	Mu       sync.Mutex
 }
@@ -42,6 +48,7 @@ func (rooms *Rooms) PushBack(room *Room) {
 		rooms.Tail = room
 	}
 	rooms.RoomsMap[room.ID] = room
+	rooms.Number ++
 }
 
 // 从头部提取一个房间
@@ -59,6 +66,7 @@ func (rooms *Rooms) PopFront() (room *Room, err error) {
 		room.Before = nil
 		room.Next = nil
 		delete(rooms.RoomsMap, room.ID)
+		rooms.Number--
 		return
 	}
 }
@@ -85,5 +93,6 @@ func (rooms *Rooms) GetByID(id int) (room *Room, err error) {
 	}
 	room.Before = nil
 	room.Next = nil
+	rooms.Number--
 	return
 }

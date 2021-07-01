@@ -45,6 +45,7 @@ func initRooms() {
 		var room = hub.Room{
 			ID: i,
 		}
+		room.New()
 		emptyRooms.PushBack(&room)
 	}
 
