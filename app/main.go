@@ -19,6 +19,7 @@ func main() {
 	api := server.Group("/api") // api统一以/api开头
 
 	userGroupRegister(api)
+	playGroupRegister(api)
 
 	if err := server.Run(":8082"); err != nil {
 		log.Fatalf("starting: %v", err)
@@ -34,4 +35,10 @@ func userGroupRegister(api *gin.RouterGroup) {
 	group.POST("/login", service.Login)
 	group.POST("/login_check", service.LoginCheck)
 	group.POST("/bind_nickname", service.BindNickname)
+}
+
+// playGroupRegister 注册与游戏有关的api。 /api/play
+func playGroupRegister(api *gin.RouterGroup) {
+	group := api.Group("/play")
+	group.GET("/create_room", service.CreateRoom)
 }

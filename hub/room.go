@@ -1,36 +1,150 @@
 package hub
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"landlord/log"
 	"sync"
 )
 
 type Room struct {
 	ID         int
 	Password   string
-	Players    []Player
-	NewPlayer  chan Player
-	PlayerExit chan int
+	Players    []*Player
+	NewPlayer  chan *Player
+	PlayerExit chan *Player
+	State      int
 	Before     *Room
 	Next       *Room
 	Mu         sync.Mutex
 }
 
+const (
+	EMPTY   = iota // 空房间
+	WAITING        // 等待开始
+	RUNNING        // 正在运行
+)
+
 func (room *Room) New() {
-	room.NewPlayer = make(chan Player, 1)
+	room.Players = make([]*Player, 3)
+	room.NewPlayer = make(chan *Player, 1)
+	room.PlayerExit = make(chan *Player, 1)
+	room.State = EMPTY
 }
 
-// Wait 等待用户加入
+// Destroy 将房间恢复原状
+func (room *Room) Destroy() {
+	room.State = EMPTY
+	room.Password = ""
+	room.Players = make([]*Player, 3)
+}
+
+// Run 进行房间内情况的处理
 func (room *Room) Run() {
+	ctx, cancel := context.WithCancel(context.Background())
 	for {
 		select {
-		case player := <-room.NewPlayer: { // 加入房间
-			if len(room.Players) >= 3 {
-				player.Conn.WriteJSON(Response{ERROR, "该房间已满", nil})
-			}
-		}
+		case player := <-room.NewPlayer:
+			room.Join(ctx, player) // 有人加入房间
+		case player := <-room.PlayerExit:
+			room.Exit(cancel, player)
 		}
 	}
+}
+
+// Join 处理有人加入的情况
+func (room *Room) Join(ctx context.Context, player *Player) {
+	room.Mu.Lock()
+	defer room.Mu.Unlock()
+	if room.State == RUNNING { // 当游戏已经开始
+		player.Conn.WriteJSON(Response{ERROR, "游戏已开始", nil})
+		player.Conn.Close()
+	} else if room.State == EMPTY { // 房间还未分配
+		player.Conn.WriteJSON(Response{ERROR, "房间不存在", nil})
+		player.Conn.Close()
+	} else {
+		if len(room.Players) == 3 { // 房间人数已满
+			player.Conn.WriteJSON(Response{ERROR, "该房间已满", nil})
+			player.Conn.Close()
+			return
+		}
+		for i := 0; i < 3; i++ {
+			if room.Players[i] == nil {
+				room.Players[i] = player
+				// TODO 返回座位信息
+
+				break
+			}
+		}
+		// TODO 若人满则开始游戏
+	}
+
+}
+
+// Exit 处理有人退出的情况
+func (room *Room) Exit(cancel context.CancelFunc, player *Player) {
+	room.Mu.Lock()
+	defer room.Mu.Unlock()
+	if room.State == WAITING {
+		if len(room.Players) == 1 { // 最后一人退出则将此房间放回空房间列表
+			if room.Password == "" { // 处理无密码的房间
+				_, err := RoomWithoutPassword.PopByID(room.ID)
+				if err != nil {
+					log.MyLog.Printf("exit: 释放房间失败")
+					return
+				}
+			} else { // 处理有密码的房间
+				_, err := RoomWithPassword.PopByID(room.ID)
+				if err != nil {
+					log.MyLog.Printf("exit: 释放房间失败")
+					return
+				}
+			}
+			room.Destroy()
+			EmptyRooms.PushBack(room)
+		} else { // 房间内还有其他人
+			for i := 0; i < 3; i++ {
+				if room.Players[i].UserID == player.UserID { // 将退出的用户剔出用户列表
+					room.Players[i] = nil
+					break
+				}
+			}
+			for i := 0; i < 3; i++ { // 向其他用户发信
+				if room.Players[i] != nil {
+					room.Players[i].Conn.WriteJSON(Response{QUIT, fmt.Sprintf("用户%s退出", player.Nickname), nil})
+				}
+			}
+		}
+	} else if room.State == RUNNING { // 房间正在游戏时，则解散房间
+		for i := 0; i < 3; i++ {
+			if room.Players[i].UserID == player.UserID { // 将退出的用户剔出用户列表
+				room.Players[i] = nil
+				break
+			}
+		}
+		for i := 0; i < 3; i++ { // 向其他用户发信
+			if room.Players[i] != nil {
+				room.Players[i].Conn.WriteJSON(Response{QUIT, fmt.Sprintf("用户%s退出", player.Nickname), nil})
+			}
+		}
+		if room.Password == "" { // 处理无密码的房间
+			_, err := RoomWithoutPasswordPlaying.PopByID(room.ID)
+			if err != nil {
+				log.MyLog.Printf("exit: 释放房间失败")
+				return
+			}
+		} else { // 处理有密码的房间
+			_, err := RoomWithPassword.PopByID(room.ID)
+			if err != nil {
+				log.MyLog.Printf("exit: 释放房间失败")
+				return
+			}
+		}
+		room.Destroy()
+		EmptyRooms.PushBack(room)
+	}
+
 }
 
 type Rooms struct {
@@ -41,9 +155,11 @@ type Rooms struct {
 	Mu       sync.Mutex
 }
 
-// New 初始化Rooms结构体
-func (rooms *Rooms) New() {
+// NewRooms 初始化Rooms结构体
+func NewRooms() *Rooms {
+	var rooms Rooms
 	rooms.RoomsMap = make(map[int]*Room)
+	return &rooms
 }
 
 // 插入新房间
