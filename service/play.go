@@ -14,7 +14,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// 创建房间
+// CreateRoom 创建房间
 func CreateRoom(c *gin.Context) {
 	session := sessions.Default(c)
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

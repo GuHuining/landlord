@@ -69,17 +69,42 @@ func (room *Room) Join(ctx context.Context, player *Player) {
 			player.Conn.Close()
 			return
 		}
+		// 选择一个空座位
+		var newSeat Seat  // 新
+		seatsData := room.generateSeatData()
 		for i := 0; i < 3; i++ {
 			if room.Players[i] == nil {
+				newSeat = Seat{i, player.Nickname}
+				writeErr := player.Conn.WriteJSON(Response{DATA, "", newSeat})
+				writeErr = player.Conn.WriteJSON(Response{DATA, "", seatsData})
+				if writeErr != nil {
+					return
+				}
 				room.Players[i] = player
-				// TODO 返回座位信息
-
 				break
+			}
+		}
+
+		// 向其他人发送加入信息
+		for i := 0; i < 3; i++ {
+			if room.Players[i] != nil && room.Players[i].UserID != player.UserID {
+				player.Conn.WriteJSON(Response{JOIN, player.Nickname+"加入了房间", newSeat})
 			}
 		}
 		// TODO 若人满则开始游戏
 	}
 
+}
+
+// generateSeatData 获取座位信息
+func (room *Room) generateSeatData() SeatsData {
+	seats := SeatsData{make([]Seat, 3)}
+	for i := 0; i < 3; i++ {
+		if room.Players[i] != nil {
+			seats.Seats[i] = Seat{i, room.Players[i].Nickname}
+		}
+	}
+	return seats
 }
 
 // Exit 处理有人退出的情况
