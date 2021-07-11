@@ -38,6 +38,7 @@ func CreateRoom(c *gin.Context) {
 		conn.Close()
 		return
 	}
+	conn.WriteJSON(hub.Response{hub.DATA, "成功", nil})
 	// 获取房间密码信息
 	var request model.CreateRoomRequest
 	conn.ReadJSON(&request)

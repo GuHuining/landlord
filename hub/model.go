@@ -7,6 +7,7 @@ const (
 	JOIN         // 加入
 	DATA         // 传输信息
 	QUIT         // 退出
+	OK           // 成功
 	ERROR        // 错误
 )
 
