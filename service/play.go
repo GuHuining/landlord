@@ -7,11 +7,15 @@ import (
 	"landlord/hub"
 	"landlord/log"
 	"landlord/model"
+	"net/http"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 // CreateRoom 创建房间
@@ -38,10 +42,13 @@ func CreateRoom(c *gin.Context) {
 		conn.Close()
 		return
 	}
-	conn.WriteJSON(hub.Response{hub.DATA, "成功", nil})
+	conn.WriteJSON(hub.Response{hub.OK, "成功", nil})
 	// 获取房间密码信息
 	var request model.CreateRoomRequest
-	conn.ReadJSON(&request)
+	err = conn.ReadJSON(&request)
+	if err != nil {
+		log.MyLog.Printf("read password: %v", err)
+	}
 	// 根据是否有密码，将房间放入不同的房间列表
 	if request.Password == "" {
 		hub.RoomWithoutPassword.PushBack(room)
@@ -49,10 +56,26 @@ func CreateRoom(c *gin.Context) {
 		room.Password = request.Password
 		hub.RoomWithPassword.PushBack(room)
 	}
+	// 将房间状态改为等待中
+	room.State = hub.WAITING
 	// 将此用户加入进房间
-	room.NewPlayer <- &hub.Player{
+	player := &hub.Player{
 		UserID: session.Get("user_id").(int),
 		Nickname: session.Get("nickname").(string),
 		Conn: conn,
+	}
+	room.NewPlayer <- player
+
+	for {
+		req := hub.Request{}
+		err = conn.ReadJSON(&req)
+		if err != nil {  // 玩家异常退出
+			room.PlayerExit <- player
+			break
+		}
+		switch req.Data {
+		default:
+
+		}
 	}
 }

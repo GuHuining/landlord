@@ -9,15 +9,16 @@ import (
 )
 
 type Room struct {
-	ID         int
-	Password   string
-	Players    []*Player
-	NewPlayer  chan *Player
-	PlayerExit chan *Player
-	State      int
-	Before     *Room
-	Next       *Room
-	Mu         sync.Mutex
+	ID           int
+	Password     string
+	Players      []*Player
+	PlayerNumber int
+	NewPlayer    chan *Player
+	PlayerExit   chan *Player
+	State        int
+	Before       *Room
+	Next         *Room
+	Mu           sync.Mutex
 }
 
 const (
@@ -64,16 +65,18 @@ func (room *Room) Join(ctx context.Context, player *Player) {
 		player.Conn.WriteJSON(Response{ERROR, "房间不存在", nil})
 		player.Conn.Close()
 	} else {
-		if len(room.Players) == 3 { // 房间人数已满
+		if room.PlayerNumber == 3 { // 房间人数已满
 			player.Conn.WriteJSON(Response{ERROR, "该房间已满", nil})
 			player.Conn.Close()
 			return
 		}
 		// 选择一个空座位
-		var newSeat Seat  // 新
+		var newSeat Seat // 新座位
 		seatsData := room.generateSeatData()
 		for i := 0; i < 3; i++ {
 			if room.Players[i] == nil {
+				// 将用户添加进房间
+				room.PlayerNumber++
 				newSeat = Seat{i, player.Nickname}
 				writeErr := player.Conn.WriteJSON(Response{DATA, "", newSeat})
 				writeErr = player.Conn.WriteJSON(Response{DATA, "", seatsData})
@@ -88,7 +91,7 @@ func (room *Room) Join(ctx context.Context, player *Player) {
 		// 向其他人发送加入信息
 		for i := 0; i < 3; i++ {
 			if room.Players[i] != nil && room.Players[i].UserID != player.UserID {
-				player.Conn.WriteJSON(Response{JOIN, player.Nickname+"加入了房间", newSeat})
+				player.Conn.WriteJSON(Response{JOIN, player.Nickname + "加入了房间", newSeat})
 			}
 		}
 		// TODO 若人满则开始游戏
@@ -102,6 +105,8 @@ func (room *Room) generateSeatData() SeatsData {
 	for i := 0; i < 3; i++ {
 		if room.Players[i] != nil {
 			seats.Seats[i] = Seat{i, room.Players[i].Nickname}
+		} else {
+			seats.Seats[i] = Seat{i, ""}  //写入空座位
 		}
 	}
 	return seats
@@ -216,7 +221,9 @@ func (rooms *Rooms) PopFront() (room *Room, err error) {
 	} else {
 		room = rooms.Head
 		rooms.Head = room.Next
-		rooms.Head.Before = nil
+		if rooms.Head != nil {
+			rooms.Head.Before = nil
+		}
 
 		room.Before = nil
 		room.Next = nil
