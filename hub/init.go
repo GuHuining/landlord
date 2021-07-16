@@ -25,7 +25,7 @@ func initRooms() {
 	playConfig := config.GetPlayConfig()
 
 	// 初始化空房间
-	for i := playConfig.Rooms.Number; i > 1; i-- {
+	for i := playConfig.Rooms.Number; i >= 1; i-- {
 		var room = Room{
 			ID: i,
 		}
